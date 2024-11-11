@@ -9,7 +9,6 @@ namespace ConsoleFinanceApp
             //stvaranje inicijalnih podataka
             var users = InitializeUsers();
             var accounts = InitializeAccounts();
-            var transactions = InitializeTransactions();
 
             //odabir
             while (true)
@@ -22,7 +21,7 @@ namespace ConsoleFinanceApp
                         ManageUsers(users,accounts);
                         break;
                     case 2:
-                        ManageAccounts();
+                        ManageAccounts(users,accounts);
                         break;
                     case 3:
                         Console.WriteLine("Izlazite iz aplikacije...");
@@ -36,12 +35,417 @@ namespace ConsoleFinanceApp
 
         }
 
-        private static void ManageAccounts()
+        private static void ManageAccounts(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts)
         {
-           
+            Console.WriteLine("Unesite ime i prezime korisnika");
+            while (true) {
+                string[] name = Console.ReadLine().Split(" ");
+                if (name.Length < 2) {
+                    Console.WriteLine("Unesite i ime i prezime");
+                    continue;
+                }
+                
+                var firstName = name[0];
+                var lastName = name[1];
+                int ? userId = null;
+
+                foreach ( var user in users)
+                {
+                    if(user.Value.Item1 == firstName && user.Value.Item2 == lastName)
+                    {
+                        userId = user.Key;
+                        break;
+                    }
+                }
+
+                if (userId == null)
+                {
+                    Console.WriteLine("Korisnik nije pronađen. Pokušajte ponovno");
+                    continue;
+                }
+
+                ManageUserAccount(users, accounts, userId.Value);
+                break;
+            }
+
         }
 
-        private static void ManageUsers(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string,double>> accounts)
+        private static void ManageUserAccount(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts, int userId)
+        {
+           
+                if (!accounts.ContainsKey(userId))
+                {
+                    Console.WriteLine("Korisnik nema račune.");
+                    return;
+                }
+
+                var userAccounts = accounts[userId];
+
+                Console.WriteLine($"Odaberite račun za upravljanje za korisnika {users[userId].Item1} {users[userId].Item2}:");
+
+                while (true)
+                {
+                    Console.WriteLine("1 - Tekući račun");
+                    Console.WriteLine("2 - Žiro račun");
+                    Console.WriteLine("3 - Prepaid račun");
+
+                    var choice = 0;
+                    if (int.TryParse(Console.ReadLine(), out choice) && (choice >= 1 && choice <= 3))
+                    {
+                        string selectedAccount = string.Empty;
+                        switch (choice){
+                            case 1:
+                                selectedAccount = "Tekući";
+                                break;
+                            case 2:
+                                selectedAccount = "Žiro";
+                                break;
+                            case 3:
+                                selectedAccount = "Prepaid";
+                                break;
+                        }
+
+
+                        if (!userAccounts.ContainsKey(selectedAccount))
+                        {
+                            Console.WriteLine($"Korisnik nema {selectedAccount} račun.");
+                            continue; 
+                        }
+
+                        ManageTransactionsForAccount(userAccounts[selectedAccount]);
+
+                        break; 
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nevažeći odabir. Pokušajte ponovo.");
+                    continue;
+                    }
+                }
+            
+
+
+
+        }
+
+        private static void ManageTransactionsForAccount(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            while (true)
+            {
+                
+                PrintChoiceForAccounts();
+
+                var actionChoice = 0;
+                if (int.TryParse(Console.ReadLine(), out actionChoice) && (actionChoice >= 1 && actionChoice <= 5))
+                {
+                    switch (actionChoice)
+                    {
+                        case 1:
+                            AddTransaction(accountTransactions); 
+                            return;
+                        case 2:
+                            DeleteTransaction(accountTransactions);
+                            return;
+                        case 3:
+                            EditTransaction(accountTransactions); 
+                            break;
+                        case 4:
+                            ViewTransactions(accountTransactions); 
+                            break;
+                        case 5:
+                            PrintFinancialReport(accountTransactions); 
+                            break;
+                        default:
+                            Console.WriteLine("Nevažeći odabir. Pokušajte ponovo.");
+                            continue;
+                    }
+
+                    
+                }
+                else
+                {
+                    Console.WriteLine("Nevažeći odabir. Pokušajte ponovo.");
+                    continue;
+                }
+            }
+        }
+
+        private static void PrintFinancialReport(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void ViewTransactions(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void EditTransaction(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void DeleteTransaction(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            Console.WriteLine("1 - po id-u");
+            Console.WriteLine("2 - ispod unesenog iznosa npr(sve transakcije ispod 10 eura");
+            Console.WriteLine("3 - iznad unesenog iznosa");
+            Console.WriteLine("4 - brisanje transakcija svih prihoda");
+            Console.WriteLine("5 - brisanje transakcija svih rashoda");
+            Console.WriteLine("6 - brisanje svih transakcija za odabranu kategoriju");
+
+            var choice = 0;
+            while (true){
+                int.TryParse(Console.ReadLine(), out choice);
+
+                switch (choice){
+                    case 1:
+                        DeleteById(accountTransactions);
+                        return;
+                    case 2:
+                        DeleteBelowAmount(accountTransactions);
+                        return;
+                    case 3:
+                        DeleteOverAmonut(accountTransactions);
+                        return;
+                    case 4:
+                        DeleteAllIncome(accountTransactions);
+                        return;
+                    case 5:
+                        DeleteAllExpense(accountTransactions);
+                        return;
+                    case 6:
+                        DeleteAllForCategory(accountTransactions);
+                        return;
+                    default:
+                        Console.WriteLine("Pogrešan unos, pokušajte ponovo");
+                        break;
+
+                }
+            }
+        }
+
+        private static void DeleteAllForCategory(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            Console.WriteLine("Unesite kategoriju za koju zelite izbrisati transakcije");
+            
+
+            while (true)
+            {
+                var category = Console.ReadLine().ToLower();
+                if (category != "placa" && category != "honorar" && category != "poklon" && category != "hrana" && category != "prijevoz" && category != "sport")
+                {
+                    Console.WriteLine("Kriv unos kategorije, pokusajte ponovo (plaća, honorar, poklon, hrana, prijevoz, sport)");
+                    continue;
+                }
+
+                var removeCount=accountTransactions.RemoveAll(t => t.Item5 == category);
+                Console.WriteLine(removeCount > 0 ? $"Uspjesno izbrisane sve transakcije za kategoriju: {category}" : "Nema transakcija za odabranu kategoriju");
+            }
+        }
+
+        private static void DeleteAllExpense(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            accountTransactions.RemoveAll(account => account.Item4 == "rashod");
+            Console.WriteLine("Izbrisane transakcije za rashode");
+        }
+
+        private static void DeleteAllIncome(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            accountTransactions.RemoveAll(account => account.Item4 == "prihod");
+            Console.WriteLine("Izbrisane transakcije za prihode");
+        }
+
+        private static void DeleteTransactionsByAmount(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions, double amount, bool deleteAbove)
+        {
+            int removedCount;
+            if (deleteAbove)
+            {
+                removedCount = accountTransactions.RemoveAll(account => account.Item2 > amount);
+                Console.WriteLine(removedCount > 0
+                    ? $"Uspješno izbrisano {removedCount} transakcija iznad iznosa od {amount}."
+                    : $"Nema transakcija iznad iznosa od {amount}.");
+            }
+            else
+            {
+                removedCount = accountTransactions.RemoveAll(account => account.Item2 < amount);
+                Console.WriteLine(removedCount > 0
+                    ? $"Uspješno izbrisano {removedCount} transakcija ispod iznosa od {amount}."
+                    : $"Nema transakcija ispod iznosa od {amount}.");
+            }
+        }
+
+        private static void DeleteOverAmonut(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            Console.WriteLine("Unesite iznos iznad kojeg želite izbrisati sve transakcije");
+            var amount = 0.0;
+            while (!double.TryParse(Console.ReadLine(), out amount))
+            {
+                Console.Write("Pogrešan unos, unesite brojčani iznos transakcije: ");
+            }
+
+            DeleteTransactionsByAmount(accountTransactions, amount, deleteAbove: true);
+        }
+
+        private static void DeleteBelowAmount(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            Console.WriteLine("Unesite iznos ispod kojeg želite izbrisati sve transakcije");
+            var amount = 0.0;
+            while (!double.TryParse(Console.ReadLine(), out amount))
+            {
+                Console.Write("Pogrešan unos, unesite brojčani iznos transakcije: ");
+            }
+
+            DeleteTransactionsByAmount(accountTransactions, amount, deleteAbove: false);
+        }
+
+        private static void DeleteById(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            var id = 0;
+            Console.Write("Unesite id transakcije koju zelite izbrisati: ");
+            while (!int.TryParse(Console.ReadLine(), out id))
+            {
+                Console.Write("Pogrešan unos, unesite brojčani id transakcije: ");
+            }
+
+            while (true) {
+                var transaction = accountTransactions.FirstOrDefault(t => t.Item1 == id);
+
+                if (transaction == null)
+                {
+                    Console.WriteLine($"Ne postoji transakcija s id-em {id}, pokušajte s drugim id-em");
+                    Console.Write("Unesite novi ID transakcije koju želite izbrisati: ");
+                    while (!int.TryParse(Console.ReadLine(), out id))
+                    {
+                        Console.Write("Pogrešan unos, unesite brojčani id transakcije: ");
+                    }
+                }
+                else
+                {
+                    accountTransactions.Remove(transaction);
+                    Console.WriteLine($"Transakcija s id-em {id} je uspješno izbrisana.");
+                    break;
+                }
+            }
+        }
+
+        private static void AddTransaction(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            Console.WriteLine("1 - trenutno izvšena transakcija");
+            Console.WriteLine("2 - ranije izvršena transakcija");
+
+            var choice = 0;
+            while (true)
+            {
+                int.TryParse(Console.ReadLine(), out choice);
+                switch (choice) {
+                    case 1:
+                        AddNewTransaction(accountTransactions);
+                        return;
+                    case 2:
+                        AddTransactionFromBefore(accountTransactions);
+                        return;
+                    default:
+                        Console.WriteLine("Pogrešan unos, pokušajte ponovo");
+                        break;
+                }
+            }
+        }
+
+        private static Tuple<int, double, string, string, string, DateTime> ValidateTransaction(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions, bool useCurrentDate)
+        {
+
+            var newId = accountTransactions.Any() ? accountTransactions.Max(t => t.Item1) + 1 : 1;
+            var amount = 0.0;
+            var description = "";
+            var type = "";
+            var category = "";
+            DateTime date;
+
+            while (true)
+            {
+                Console.Write("Unesite iznos transakcije: ");
+                if (double.TryParse(Console.ReadLine(), out amount) && amount >= 0)
+                {
+                    break;
+                }
+                Console.WriteLine("Iznos transakcije mora biti veći ili jednak 0, pokušajte ponovno.");
+            }
+
+            while (true)
+            {
+                Console.Write("Unesite opis transakcije: ");
+                description = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(description))
+                {
+                    break;
+                }
+                Console.WriteLine("Transakcija mora sadržavati opis.");
+            }
+
+            while (true)
+            {
+                Console.Write("Unesite tip transakcije (prihod ili rashod): ");
+                type = Console.ReadLine().ToLower();
+                if (type == "prihod" || type == "rashod")
+                {
+                    break;
+                }
+                Console.WriteLine("Unesite valjan tip transakcije (prihod ili rashod).");
+            }
+
+            while (true)
+            {
+                if (type == "prihod")
+                {
+                    Console.WriteLine("Izaberite kategoriju za prihod: placa, honorar, poklon");
+                }
+                else
+                {
+                    Console.WriteLine("Izaberite kategoriju za rashod: hrana, prijevoz, sport");
+                }
+
+                category = Console.ReadLine().ToLower();
+
+                if ((type == "prihod" && (category == "placa" || category == "honorar" || category == "poklon")) ||
+                    (type == "rashod" && (category == "hrana" || category == "prijevoz" || category == "sport")))
+                {
+                    break;
+                }
+                Console.WriteLine("Tip i kategorija transakcije nisu valjani, pokušajte ponovo.");
+            }
+            if (useCurrentDate)
+            {
+                date = DateTime.Now;
+            }
+            else
+            {
+                date = EnterDateOfBirth();
+            }
+            return Tuple.Create(newId, amount, description, type, category, date);
+        }
+
+        private static void AddTransactionFromBefore(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            var transaction = ValidateTransaction(accountTransactions,false);
+            accountTransactions.Add(transaction);
+        }
+
+        private static void AddNewTransaction(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            var transaction = ValidateTransaction(accountTransactions, true);
+            accountTransactions.Add(transaction);
+        }
+
+        private static void PrintChoiceForAccounts()
+        {
+            Console.WriteLine("1 - unos nove transakcije");
+            Console.WriteLine("2 - brisanje transakcije");
+            Console.WriteLine("3 - uređivanje transakcije");
+            Console.WriteLine("4 - pregled transakcija");
+            Console.WriteLine("5 - financijsko izvješće");
+        }
+        private static void ManageUsers(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts)
         {
             Console.WriteLine("1 - Unos novog korisnika");
             Console.WriteLine("2 - Brisanje korisnika");
@@ -80,7 +484,7 @@ namespace ConsoleFinanceApp
             }
         }
 
-        private static void ViewAllUsers(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, double>> accounts)
+        private static void ViewAllUsers(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts)
         {
             Console.WriteLine("1 - ispis svih korisnika abecedno po prezimenu");
             Console.WriteLine("2 - ispis svih korisnika starijih od 30 godina");
@@ -111,13 +515,37 @@ namespace ConsoleFinanceApp
             }
         }
 
-        private static void PrintUsersWithNegative(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, double>> accounts)
+        private static double CalculateAccountBalance(List<Tuple<int, double, string, string, string, DateTime>> transactions)
+        {
+            return transactions.Sum(t => t.Item2); //zbraja sve iznose transakcija 
+        }
+
+        private static void PrintUsersWithNegative(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts)
         {
 
             foreach (var user in users) {
-                if (accounts.ContainsKey(user.Key) && accounts[user.Key].Any(account => account.Value < 0))
+                if (accounts.ContainsKey(user.Key))
                 {
-                    Console.WriteLine($"ID: {user.Key}, Ime: {user.Value.Item1}, Prezime: {user.Value.Item2}, Datum rođenja: {user.Value.Item3:yyyy-MM-dd}");
+                    foreach (var account in accounts[user.Key])
+                    {
+                        if(account.Value.Any(transaction => transaction.Item2 < 0))
+                        {
+                         
+                            double balance = CalculateAccountBalance(account.Value);
+
+               
+                            if (balance < 0)
+                            {
+                                Console.WriteLine($"ID: {user.Key}, Ime: {user.Value.Item1}, Prezime: {user.Value.Item2}, Datum rođenja: {user.Value.Item3:yyyy-MM-dd}");
+                                break;
+                            }
+                            else
+                            {
+                                Console.WriteLine("Nema korisnika sa negativnim racunom");
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -267,7 +695,7 @@ namespace ConsoleFinanceApp
             }
         }
 
-        private static void AddNewUser(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, double>> accounts)
+        private static void AddNewUser(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts)
         {
             var newUserId = users.Keys.Max() + 1;
 
@@ -280,13 +708,25 @@ namespace ConsoleFinanceApp
             DateTime birthDate = EnterDateOfBirth();
 
             users.Add(newUserId, Tuple.Create(firstName, lastName, birthDate));
-            
 
-            var userAccounts = new Dictionary<string, double>()
+
+            var userAccounts = new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
             {
-                 { "Tekući", 100.00 },
-                 { "Žiro", 0.00 },
-                 { "Prepaid", 0.00 }
+                { "Tekući", new List<Tuple<int, double, string, string, string, DateTime>>
+                    {
+                        Tuple.Create(1, 100.00, "Početno stanje", "prihod", "početni depozit", DateTime.Now)
+                    }
+                },
+                { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>
+                    {
+                         Tuple.Create(1, 0.00, "Početno stanje", "prihod", "početni depozit", DateTime.Now)
+                    }
+                },
+                { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>
+                    {
+                         Tuple.Create(1, 0.00, "Početno stanje", "prihod", "početni depozit", DateTime.Now)
+                    }
+                }
             };
 
             accounts.Add(newUserId,userAccounts);
@@ -299,7 +739,7 @@ namespace ConsoleFinanceApp
         {
             while (true)
             {
-                Console.WriteLine("Datum rođenja:");
+                //Console.WriteLine("Datum rođenja:");
                 Console.Write("Dan: ");
                 var day = 0;
                 int.TryParse(Console.ReadLine(), out day);
@@ -347,23 +787,40 @@ namespace ConsoleFinanceApp
             };
         }
 
-        private static Dictionary<int, Dictionary<string, double>> InitializeAccounts()
+        private static Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> InitializeAccounts()
         {
-            return new Dictionary<int, Dictionary<string, double>>()
-            {
-                { 1, new Dictionary<string, double>() { { "Tekući", 100.00 }, { "Žiro", 0.00 }, { "Prepaid", 0.00 } } },
-                { 2, new Dictionary<string, double>() { { "Tekući", -200.00 }, { "Žiro", 0.00 }, { "Prepaid", 0.00 } } },
-                { 3, new Dictionary<string, double>() { { "Tekući", 50.00 }, { "Žiro", 0.00 }, { "Prepaid", 0.00 } } }
-            };
-        }
+            return new Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>>()
+             {
+                 { 1, new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
+                     {
+                         { "Tekući", new List<Tuple<int, double, string, string, string, DateTime>>() {
+                            Tuple.Create(1, 100.00, "Početno stanje", "prihod", "placa", DateTime.Now),
+                            Tuple.Create(2, -15.00, "Kupovina", "rashod", "hrana", DateTime.Now)
+                         }},
+                         { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>() {
+                            Tuple.Create(3, 200.00, "isplata", "prihod", "honorar", DateTime.Now)
+                         }},
+                         { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>() {
+                            Tuple.Create(4, -50.00, "Uplata", "rashod", "telefon", DateTime.Now)
+                         }}        
+                    }
+                 },
 
-        private static Dictionary<int, Tuple<int, double, string, string, string, DateTime>> InitializeTransactions()
-        {
-            return new Dictionary<int, Tuple<int, double, string, string, string, DateTime>>()
-            {
-                {1, Tuple.Create(1, 100.00,"Početno stanje","prihod","plaća",DateTime.Now)},
-                {2, Tuple.Create(1, -15.00,"Kupovina","rashod","hrana",DateTime.Now)},
-                {3, Tuple.Create(1, 200.00,"isplata ","prihod","honorar",DateTime.Now)}
+                 { 2, new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
+                     {
+                        { "Tekući", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                           Tuple.Create(1, 300.00, "Početno stanje", "prihod", "plaća", DateTime.Now),
+                           Tuple.Create(2, 100.00, "Kupovina", "rashod", "elektronika", DateTime.Now)
+                        }},
+                        { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                           Tuple.Create(3, 150.00, "isplata", "prihod", "honorar", DateTime.Now)
+                        }},
+                        { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                           Tuple.Create(4, 0.00, "Uplata", "prihod", "internet", DateTime.Now)
+                         }}
+                     }
+                 }
+
             };
         }
 
