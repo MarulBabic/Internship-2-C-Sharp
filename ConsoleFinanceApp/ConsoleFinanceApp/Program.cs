@@ -193,16 +193,16 @@ namespace ConsoleFinanceApp
                 switch (choice) {
                     case 1:
                         ShowCurrentAccountBalance(accountTransactions);
+                        return;
+                    case 2:
+                        ShowTotalTransactionCount(accountTransactions);
                         break;
-                    //case 2:
-                    //    ShowTotalTransactionCount(accountTransactions);
-                    //    break;
-                    //case 3:
-                    //    ShowTotalIncomeAndExpenseForMonthAndYear(accountTransactions);
-                    //    break;
-                    //case 4:
-                    //    ShowExpensePercentageForCategory(accountTransactions);
-                    //    break;
+                    case 3:
+                        ShowTotalIncomeAndExpenseForMonthAndYear(accountTransactions);
+                        return;
+                    case 4:
+                        ShowExpensePercentageForCategory(accountTransactions);
+                        break;
                     //case 5:
                     //    ShowAverageTransactionAmountForMonthAndYear(accountTransactions);
                     //    break;
@@ -214,6 +214,100 @@ namespace ConsoleFinanceApp
                         break;
                 }
             }
+        }
+
+        private static void ShowExpensePercentageForCategory(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            Console.WriteLine("Unesite kategoriju za rashode: hrana,prijevoz,sport");
+            while (true)
+            {
+                var category = Console.ReadLine().ToLower();
+
+                if (!ExpenseCategories.Contains(category))
+                {
+                    Console.WriteLine("Unesite valjanu kategoriju");
+                    continue;
+                }
+                var categoryTransactions = accountTransactions.Where(t => t.Item4 == "rashod" && t.Item5 == category).ToList();
+
+                var totalCategoryExpense = categoryTransactions.Sum(t => t.Item2);
+
+                var totalExpenses = accountTransactions.Where(t => t.Item4 == "rashod").Sum(t => t.Item2);
+
+                if (totalExpenses == 0)
+                {
+                    Console.WriteLine("Nema rashoda za izračunavanje postotka.");
+                }
+                else
+                {
+                    var percentage = (totalCategoryExpense / totalExpenses) * 100;
+
+                    Console.WriteLine($"Postotak rashoda za kategoriju '{category}' je: {percentage:F2}%");
+                }
+                break;
+
+            }
+        }
+
+        private static void ShowTotalIncomeAndExpenseForMonthAndYear(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            Console.WriteLine("Unesite mjesec i godinu za koju zelite ispisati iznos prihoda i rashoda: ");
+            Console.Write("Mjesec: ");
+            var month = 0;
+            while (true)
+            {
+                int.TryParse(Console.ReadLine(), out month);
+                if(month < 1 || month > 12)
+                {
+                    Console.WriteLine("Unesite valjanu vrijednost za mjesec (1-12)");
+                    continue;
+                }
+                break;
+            }
+            Console.Write("Godina: ");
+            var year = 0;
+            while (true)
+            {
+                int.TryParse(Console.ReadLine(), out year);
+                if (year < 1900 || year > DateTime.Now.Year)
+                {
+                    Console.WriteLine("Unesite valjanu vrijednost za godinu (1900-2024)");
+                    continue;
+                }
+                break;
+            }
+
+            var income = 0.0;
+            var expense = 0.0;
+            foreach (var t in accountTransactions)
+            {
+                if(month == t.Item6.Month && year == t.Item6.Year)
+                {
+                    if (t.Item4 == "prihod")
+                    {
+                        income += t.Item2;
+                    }
+                    else
+                    {
+                        expense += t.Item2;
+                    }
+                }
+            }
+
+            Console.WriteLine($"Ukupni prihodi za mjesec: {month} i godinu {year} je: {income}");
+            Console.WriteLine($"Ukupni rashod za mjesec: {month} i godinu {year} je: {expense}");
+            Console.WriteLine($"Ukupno stanje je: {income-expense}");
+        }
+
+        private static void ShowTotalTransactionCount(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        {
+            var transactionCount = 0;
+            foreach (var transaction in accountTransactions)
+            {
+                transactionCount++;
+            }
+
+            Console.WriteLine($"Ukupni broj transackija na racunu je: {transactionCount}");
         }
 
         private static void ShowCurrentAccountBalance(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
@@ -1100,8 +1194,8 @@ namespace ConsoleFinanceApp
                      {
                          { "Tekući", new List<Tuple<int, double, string, string, string, DateTime>>() {
                             Tuple.Create(1, 100.00, "Početno stanje", "prihod", "placa", new DateTime(2022,1,4)),
-                            Tuple.Create(2, 200.00, "Kupovina", "rashod", "hrana", new DateTime(2022,1,3)),
-                            Tuple.Create(3, 50.00, "Adaptacija", "rashod", "hrana", new DateTime(2023,1,4))
+                            Tuple.Create(2, 200.00, "Kupovina", "rashod", "hrana", new DateTime(2022,2,3)),
+                            Tuple.Create(3, 50.00, "Adaptacija", "rashod", "sport", new DateTime(2022,1,5))
                          }},
                          { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>() {
                             Tuple.Create(3, 200.00, "isplata", "prihod", "honorar", DateTime.Now)
