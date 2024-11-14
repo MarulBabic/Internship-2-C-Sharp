@@ -35,8 +35,8 @@ namespace ConsoleFinanceApp
 
         }
 
-        private static readonly HashSet<string> IncomeCategories = new HashSet<string> { "placa", "honorar", "poklon" };
-        private static readonly HashSet<string> ExpenseCategories = new HashSet<string> { "hrana", "prijevoz", "sport" };
+        private static readonly HashSet<string> IncomeCategories = new HashSet<string> { "placa", "honorar", "poklon", "stipendija", "dividende" };
+        private static readonly HashSet<string> ExpenseCategories = new HashSet<string> { "hrana", "prijevoz", "sport", "stanarina", "zdravstvo"};
 
 
         private static void PrintInput()
@@ -512,7 +512,7 @@ namespace ConsoleFinanceApp
                 }
                 break;
             }
-            Console.WriteLine(type == "prihod" ? "\nIzaberite kategoriju za prihode (placa,honorar,poklon)" : "\nIzaberite kategoriju za rashode (hrana,prijevoz,sport)");
+            Console.WriteLine(type == "prihod" ? "\nIzaberite kategoriju za prihode (placa,honorar,poklon,stipendija,dividende)" : "\nIzaberite kategoriju za rashode (hrana,prijevoz,sport,stanarina,zdravstvo)");
             while (true)
             {
                 PrintInput();
@@ -746,7 +746,7 @@ namespace ConsoleFinanceApp
                 var category = Console.ReadLine().ToLower();
                 if (!IncomeCategories.Contains(category) && !ExpenseCategories.Contains(category))
                 {
-                    Console.WriteLine("Kriv unos kategorije, pokusajte ponovo (plaća, honorar, poklon, hrana, prijevoz, sport)");
+                    Console.WriteLine("Kriv unos kategorije, pokusajte ponovo (plaća, honorar, poklon, stipendija, dividende hrana, prijevoz, sport, stanarina, zdravstvo)");
                     continue;
                 }
 
@@ -980,11 +980,11 @@ namespace ConsoleFinanceApp
             {
                 if (type == "prihod")
                 {
-                    Console.WriteLine("Izaberite kategoriju za prihod: placa, honorar, poklon");
+                    Console.WriteLine("Izaberite kategoriju za prihod: placa, honorar, poklon, stipendija, dividende");
                 }
                 else
                 {
-                    Console.WriteLine("Izaberite kategoriju za rashod: hrana, prijevoz, sport");
+                    Console.WriteLine("Izaberite kategoriju za rashod: hrana, prijevoz, sport, stanarina, zdravstvo");
                 }
 
                 category = Console.ReadLine().ToLower();
@@ -1067,9 +1067,6 @@ namespace ConsoleFinanceApp
                 default:
                     Console.WriteLine("Neispravan unos");
                     break;
-
-
-
             }
         }
 
@@ -1202,9 +1199,18 @@ namespace ConsoleFinanceApp
 
                 DateTime dateTime = EnterDateOfBirth();
 
-                users[id] = new Tuple<string, string, DateTime>(firstName, lastName,dateTime);
-                Console.WriteLine($"Korisnik sa id-om {id} ureden");
-                break;
+                var makeSure = false;
+                if (SecondCheck(makeSure))
+                {
+                    users[id] = new Tuple<string, string, DateTime>(firstName, lastName, dateTime);
+                    Console.WriteLine($"Korisnik sa id-om {id} ureden");
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("Odustajete od izbora, povratak na pocetni izbornik");
+                    break;
+                }
 
             }
         }
@@ -1266,9 +1272,18 @@ namespace ConsoleFinanceApp
 
                 if (userIdToDelete.HasValue)
                 {
-                    users.Remove(userIdToDelete.Value);
-                    Console.WriteLine($"Korisnik {firstName} {lastName} je uspješno izbrisan");
-                    break;
+                    var makeSure = false;
+                    if (SecondCheck(makeSure))
+                    {
+                        users.Remove(userIdToDelete.Value);
+                        Console.WriteLine($"Korisnik {firstName} {lastName} je uspješno izbrisan");
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Odustajete od izbora, povratak na pocetni izbornik");
+                        break;
+                    }
                 }
                 else
                 {
@@ -1294,9 +1309,18 @@ namespace ConsoleFinanceApp
                 }
                 else
                 {
-                    Console.WriteLine("Brišete korisnika sa id-em {0}",id);
-                    users.Remove(id);
-                    break;
+                    var makeSure = false;
+                    if (SecondCheck(makeSure))
+                    {
+                        Console.WriteLine("Brišete korisnika sa id-em {0}", id);
+                        users.Remove(id);
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Odustajete od izbora, povratak na pocetni izbornik");
+                        break;
+                    }
                 }
             }
         }
@@ -1379,7 +1403,6 @@ namespace ConsoleFinanceApp
             var day = 0;
             while (true)
             {
-                //Console.WriteLine("Datum rođenja:");
                 Console.Write("Dan: ");
                 int.TryParse(Console.ReadLine(), out day);
                 if (day < 1 || day > 31)
@@ -1451,10 +1474,10 @@ namespace ConsoleFinanceApp
                             Tuple.Create(3, 50.00, "Adaptacija", "rashod", "sport", new DateTime(2022,1,5))
                          }},
                          { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>() {
-                            Tuple.Create(3, 200.00, "isplata", "prihod", "honorar", new DateTime(2022,1,6))
+                            Tuple.Create(1, 200.00, "isplata", "prihod", "honorar", new DateTime(2022,1,6))
                          }},
                          { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>() {
-                            Tuple.Create(4, 50.00, "Uplata", "prihod", "telefon", DateTime.Now)
+                            Tuple.Create(1, 50.00, "Uplata", "prihod", "telefon", DateTime.Now)
                          }}        
                     }
                  },
@@ -1466,13 +1489,28 @@ namespace ConsoleFinanceApp
                            Tuple.Create(2, 100.00, "Kupovina", "rashod", "elektronika", DateTime.Now)
                         }},
                         { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(3, 150.00, "isplata", "prihod", "honorar", DateTime.Now)
+                           Tuple.Create(1, 150.00, "isplata", "prihod", "honorar", DateTime.Now)
                         }},
                         { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(4, 0.00, "Uplata", "prihod", "internet", DateTime.Now)
+                           Tuple.Create(1, 0.00, "Uplata", "prihod", "internet", DateTime.Now)
                          }}
                      }
-                 }
+                 },
+
+                { 3, new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
+                     {
+                        { "Tekući", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                           Tuple.Create(1, 300.00, "Početno stanje", "prihod", "plaća", DateTime.Now),
+                           Tuple.Create(2, 100.00, "Kupovina", "rashod", "elektronika", DateTime.Now)
+                        }},
+                        { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                           Tuple.Create(1, 150.00, "isplata", "prihod", "honorar", DateTime.Now)
+                        }},
+                        { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                           Tuple.Create(1, 0.00, "Uplata", "prihod", "internet", DateTime.Now)
+                         }}
+                     }
+                 },
 
             };
         }
