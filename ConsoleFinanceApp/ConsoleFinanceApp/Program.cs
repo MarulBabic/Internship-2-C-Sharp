@@ -1,4 +1,7 @@
 ﻿
+using System.Globalization;
+using System.Security.Principal;
+
 namespace ConsoleFinanceApp
 {
     internal class Program
@@ -35,8 +38,8 @@ namespace ConsoleFinanceApp
 
         }
 
-        private static readonly HashSet<string> IncomeCategories = new HashSet<string> { "placa", "honorar", "poklon", "stipendija", "dividende" };
-        private static readonly HashSet<string> ExpenseCategories = new HashSet<string> { "hrana", "prijevoz", "sport", "stanarina", "zdravstvo"};
+        private static readonly HashSet<string> IncomeCategories = new HashSet<string> { "placa", "honorar", "poklon", "stipendija", "dividende", "prijenos" };
+        private static readonly HashSet<string> ExpenseCategories = new HashSet<string> { "hrana", "prijevoz", "sport", "stanarina", "zdravstvo, prijenos"};
 
 
         private static void PrintInput()
@@ -48,8 +51,9 @@ namespace ConsoleFinanceApp
 
         private static void ManageAccounts(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts)
         {
-            Console.WriteLine("Unesite ime i prezime korisnika");
+            Console.WriteLine("\nUnesite ime i prezime korisnika");
             while (true) {
+                PrintInput();
                 string[] name = Console.ReadLine().Split(" ");
                 if (name.Length < 2) {
                     Console.WriteLine("Unesite i ime i prezime");
@@ -91,56 +95,197 @@ namespace ConsoleFinanceApp
                 }
 
                 var userAccounts = accounts[userId];
-                Console.WriteLine();
-                Console.WriteLine($"Odaberite račun za upravljanje za korisnika {users[userId].Item1} {users[userId].Item2}:");
+                Console.WriteLine($"\nOdaberite račun za upravljanje za korisnika {users[userId].Item1} {users[userId].Item2}:");
 
                 while (true)
                 {
                     Console.WriteLine("1 - Tekući račun");
                     Console.WriteLine("2 - Žiro račun");
                     Console.WriteLine("3 - Prepaid račun");
+                    Console.WriteLine("4 - Prijenos novca sa jednog na drugi racun");
+                    Console.WriteLine("5 - Slanje novca drugim korisnicima");
 
                     var choice = 0;
                      PrintInput();
-                    if (int.TryParse(Console.ReadLine(), out choice) && (choice >= 1 && choice <= 3))
+                    if (int.TryParse(Console.ReadLine(), out choice) && (choice >= 1 && choice <= 5))
                     {
-                        string selectedAccount = string.Empty;
+                        var selectedAccount = string.Empty;
                         switch (choice){
                             case 1:
-                                selectedAccount = "Tekući";
+                                selectedAccount = "Tekuci";
                                 break;
                             case 2:
-                                selectedAccount = "Žiro";
+                                selectedAccount = "Ziro";
                                 break;
                             case 3:
                                 selectedAccount = "Prepaid";
                                 break;
+                            case 4:
+                                var fromAccount = GetFromAccount();
+                                var toAccount = GetToAccount(fromAccount);
+                                TransferMoney(userAccounts[fromAccount], userAccounts[toAccount]);
+                                return;
+                            case 5:
+                                SendMoneyToOtherUser(users, accounts, userId);
+                                return;
                              default:
                                  Console.WriteLine("Pogresan unos, pokusaj ponovo");
                                  break;
                         }
 
-
-                        if (!userAccounts.ContainsKey(selectedAccount))
+                        if (choice >= 1 && choice <= 3)
                         {
-                            Console.WriteLine($"Korisnik nema {selectedAccount} račun.");
-                            continue; 
+                            ManageTransactionsForAccount(userAccounts[selectedAccount]);
+                            break;
                         }
-
-                        ManageTransactionsForAccount(userAccounts[selectedAccount]);
-
-                        break; 
                     }
                     else
                     {
                         Console.WriteLine("Nevažeći odabir. Pokušajte ponovo.");
-                    continue;
+                        continue;
                     }
                 }
             
 
 
 
+        }
+
+        private static void SendMoneyToOtherUser(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts, int userId)
+        {
+            Console.WriteLine("\nIzaberite korisnika kojem zelite poslati novac(ime prezime)\n");
+            foreach (var user in users)
+            {
+                Console.WriteLine($"{user.Value.Item1} {user.Value.Item2}");
+            }
+
+            PrintInput();
+            var nameAndSurname = Console.ReadLine().Trim().ToLower();
+            var targetUser = users.Values.FirstOrDefault(user =>(user.Item1 + " " + user.Item2).ToLower() == nameAndSurname);
+
+            if (targetUser == null)
+            {
+                Console.WriteLine("Korisnik s tim imenom i prezimenom nije pronađen.");
+                return;
+            }
+
+            int targetUserId = users.First(u => u.Value.Item1 + " " + u.Value.Item2 == targetUser.Item1 + " " + targetUser.Item2).Key;
+
+            if (targetUserId == userId)
+            {
+                Console.WriteLine("Za prijenos novca na vas drugi racun izaberite 4");
+                return;
+            }
+
+            var fromAccount = GetFromAccount();  
+            var balance = ShowCurrentAccountBalance(accounts[userId][fromAccount]);
+            Console.WriteLine($"\nTrenutno stanje na racunu je {balance:F2}");
+
+            Console.WriteLine("Unesite iznos za prijenos: ");
+            var amount = 0.0;
+            while (true)
+            {
+                PrintInput();
+                if (double.TryParse(Console.ReadLine(), out amount) && amount > 0)
+                {
+                    if (amount <= balance)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Nemate dovoljno sredstava na računu za ovaj prijenos.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Neispravan iznos, pokušajte ponovo.");
+                }
+            }
+
+            var toAccount = GetToAccount("");
+
+            accounts[userId][fromAccount].Add(Tuple.Create(accounts[userId][fromAccount].Count + 1, amount, "Transfer prema korisniku " + targetUser.Item1, "rashod", "prijenos", DateTime.Now));
+            accounts[targetUserId][toAccount].Add(Tuple.Create(accounts[targetUserId][toAccount].Count + 1, amount, "Primljeni transfer od korisnika " + users[userId].Item1, "prihod", "prijenos", DateTime.Now));
+            Console.WriteLine($"\nUspješno ste poslali {amount:F2} eura korisniku {targetUser.Item1} {targetUser.Item2} na {toAccount} račun.\n");
+            return;
+        }
+
+        private static void TransferMoney(List<Tuple<int, double, string, string, string, DateTime>> fromAccount, List<Tuple<int, double, string, string, string, DateTime>> toAccount)
+        {
+            var balanceBefore = ShowCurrentAccountBalance(fromAccount);
+            Console.WriteLine($"\nStanje racuna prije prijenosa je: {balanceBefore:F2}");
+            Console.WriteLine("Unesite iznos za prijenos: ");
+            var amount = 0.0;
+
+            while (true)
+            {
+                PrintInput();
+                double.TryParse(Console.ReadLine(), out amount);
+                if(amount < 0)
+                {
+                    Console.WriteLine("Iznos mora biti veci od 0");
+                    continue;
+                }
+                break;
+            }
+
+            var balance = ShowCurrentAccountBalance(fromAccount);
+            if(amount > balance)
+            {
+                Console.WriteLine("Nemate dovoljno sredstava za prijenos");
+                return;
+            }
+
+            fromAccount.Add(Tuple.Create(fromAccount.Count + 1, amount, "Prijenos novca", "rashod", "prijenos", DateTime.Now));
+            toAccount.Add(Tuple.Create(toAccount.Count + 1, amount, "Prijenos novca", "prihod", "prijenos", DateTime.Now));
+
+            Console.WriteLine("\nPrijenos novca uspješno izvršen.");
+
+            var balanceAfter = ShowCurrentAccountBalance(fromAccount);
+            Console.WriteLine($"stanje na računu nakon prijenosa je: {balanceAfter:F2}\n");
+        }
+
+        private static string GetToAccount(string fromAccount)
+        {
+            Console.WriteLine("\nUnesite racun na koji zelite prebaciti sredstva: tekuci, ziro, prepaid");
+            var account = "";
+            while (true)
+            {
+                PrintInput();
+                account = Console.ReadLine().ToLower();
+                account = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(account);
+                if (account.Equals(fromAccount))
+                {
+                    Console.WriteLine("Nemozete prebaciti sredstva na isti racun, odaberite drugi");
+                    continue;
+                }
+                if(account != "Tekuci" && account != "Ziro" && account != "Prepaid")
+                {
+                    Console.WriteLine("Unesite jedan od mogucih racuna: Tekuci, Ziro, Prepaid");
+                    continue;
+                }
+                break;
+            }
+            return account;
+        }
+
+        private static string GetFromAccount()
+        {
+            Console.WriteLine("\nUnesite racun sa kojeg zelite prebaciti sredstva: tekuci, ziro, prepaid");
+            var account = "";
+            do
+            {
+                PrintInput();
+                account = Console.ReadLine().ToLower();
+                account = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(account);
+                if (account != "Tekuci" && account != "Ziro" && account != "Prepaid")
+                {
+                    Console.WriteLine("Nevalidan unos. Molimo unesite 'Tekuci', 'Ziro' ili 'Prepaid'.");
+                }
+            } while (account != "Tekuci" && account != "Ziro" && account != "Prepaid");
+
+            return account;
         }
 
         private static void ManageTransactionsForAccount(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
@@ -203,7 +348,8 @@ namespace ConsoleFinanceApp
 
                 switch (choice) {
                     case 1:
-                        ShowCurrentAccountBalance(accountTransactions);
+                        var balance = ShowCurrentAccountBalance(accountTransactions);
+                        Console.WriteLine($"Trenutno stanje na računu je: {balance:F2}");
                         return;
                     case 2:
                         ShowTotalTransactionCount(accountTransactions);
@@ -318,7 +464,7 @@ namespace ConsoleFinanceApp
 
         private static void ShowExpensePercentageForCategory(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine("Unesite kategoriju za rashode: hrana,prijevoz,sport");
+            Console.WriteLine("Unesite kategoriju za rashode: hrana,prijevoz,sport,stanarina,zdravstvo");
             while (true)
             {
                 PrintInput();
@@ -394,9 +540,9 @@ namespace ConsoleFinanceApp
                     }
                 }
             }
-
+            Console.WriteLine();
             Console.WriteLine($"Ukupni prihodi za mjesec: {month} i godinu {year} je: {income}");
-            Console.WriteLine($"Ukupni rashod za mjesec: {month} i godinu {year} je: {expense}");
+            Console.WriteLine($"Ukupni rashodi za mjesec: {month} i godinu {year} je: {expense}");
             Console.WriteLine($"Ukupno stanje je: {income-expense}");
         }
 
@@ -411,11 +557,12 @@ namespace ConsoleFinanceApp
             Console.WriteLine($"Ukupni broj transackija na racunu je: {transactionCount}");
         }
 
-        private static void ShowCurrentAccountBalance(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
+        private static double ShowCurrentAccountBalance(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
             var accountBalance = 0.0;
-            foreach (var transaction in accountTransactions) {
-               if(transaction.Item4 == "prihod")
+            foreach (var transaction in accountTransactions)
+            {
+                if (transaction.Item4 == "prihod")
                 {
                     accountBalance += transaction.Item2;
                 }
@@ -424,12 +571,11 @@ namespace ConsoleFinanceApp
                     accountBalance -= transaction.Item2;
                 }
             }
-
-            Console.WriteLine($"Trenutno stanje na računu je: {accountBalance:F2}");
             if(accountBalance < 0.0)
             {
                 Console.WriteLine("Upozorenje! Stanje na računu je u minusu");
             }
+            return accountBalance;
         }
 
         private static void ViewTransactions(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
@@ -958,11 +1104,18 @@ namespace ConsoleFinanceApp
             {
                 Console.Write("Unesite opis transakcije: ");
                 description = Console.ReadLine();
-                if (!string.IsNullOrWhiteSpace(description))
+                if (!string.IsNullOrWhiteSpace(description) && !IsNumber(description))
                 {
                     break;
                 }
-                Console.WriteLine("Transakcija mora sadržavati opis.");
+                if (string.IsNullOrWhiteSpace(description))
+                {
+                    Console.WriteLine("Transakcija mora sadržavati opis.");
+                }
+                else
+                {
+                    Console.WriteLine("Opis ne može biti broj. Unesite valjan opis.");
+                }
             }
 
             while (true)
@@ -1007,6 +1160,12 @@ namespace ConsoleFinanceApp
             return Tuple.Create(newId, amount, description, type, category, date);
         }
 
+        private static bool IsNumber(string input)
+        {
+            double number;
+            return double.TryParse(input, out number);
+        }
+
         private static void AddTransactionFromBefore(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
             var newId = accountTransactions.Any() ? accountTransactions.Max(t => t.Item1) + 1 : 1;
@@ -1048,26 +1207,30 @@ namespace ConsoleFinanceApp
 
 
             var choice = 0;
-            PrintInput();
-            int.TryParse(Console.ReadLine(), out choice);
+            do
+            {
+                PrintInput();
+                int.TryParse(Console.ReadLine(), out choice);
 
-            switch (choice) {
-                case 1:
-                    AddNewUser(users,accounts);
-                    break;
+                switch (choice)
+                {
+                    case 1:
+                        AddNewUser(users, accounts);
+                        break;
                     case 2:
-                    DeleteUser(users);                    
-                    break;
-                case 3:
-                    EditUser(users);
-                    break;
-                case 4:
-                    ViewAllUsers(users,accounts);
-                    break;
-                default:
-                    Console.WriteLine("Neispravan unos");
-                    break;
-            }
+                        DeleteUser(users);
+                        break;
+                    case 3:
+                        EditUser(users);
+                        break;
+                    case 4:
+                        ViewAllUsers(users, accounts);
+                        break;
+                    default:
+                        Console.WriteLine("Neispravan unos, pokusajte ponovo(1 - 4)");
+                        break;
+                }
+            } while (choice < 1 || choice > 4);
         }
 
         private static void ViewAllUsers(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts)
@@ -1139,13 +1302,13 @@ namespace ConsoleFinanceApp
 
                 if (hasNegativeBalance)
                 {
-                    Console.WriteLine($"ID: {user.Key}, Ime: {user.Value.Item1}, Prezime: {user.Value.Item2}, Datum rođenja: {user.Value.Item3:yyyy-MM-dd}");
+                    Console.WriteLine($"\nID: {user.Key}, Ime: {user.Value.Item1}, Prezime: {user.Value.Item2}, Datum rođenja: {user.Value.Item3:yyyy-MM-dd}");
                     anyUserWithNegativeBalance = true;
                 }
             }
             if (!anyUserWithNegativeBalance)
             {
-                Console.WriteLine("Nema korisnika sa računom u minusu.");
+                Console.WriteLine("\nNema korisnika sa računom u minusu.");
             }
         }
 
@@ -1158,7 +1321,7 @@ namespace ConsoleFinanceApp
                                                   currentDate.Month >= u.Value.Item3.Month &&
                                                   currentDate.Day >= u.Value.Item3.Day));
 
-            Console.WriteLine("Korisnici stariji od 30 godina:");
+            Console.WriteLine("\nKorisnici stariji od 30 godina:");
             foreach (var user in filteredUsers)
             {
                 Console.WriteLine($"ID: {user.Key}, Ime: {user.Value.Item1}, Prezime: {user.Value.Item2}, Datum rođenja: {user.Value.Item3:yyyy-MM-dd}");
@@ -1169,7 +1332,7 @@ namespace ConsoleFinanceApp
         private static void PrintUsersByLastname(Dictionary<int, Tuple<string, string, DateTime>> users)
         {
             var sortedUsers = users.OrderBy(u => u.Value.Item2);
-            Console.WriteLine("Korisnici poredani abecedno po prezimenu:");
+            Console.WriteLine("\nKorisnici poredani abecedno po prezimenu:");
             foreach (var user in sortedUsers)
             {
                 Console.WriteLine($"ID: {user.Key}, Ime: {user.Value.Item1}, Prezime: {user.Value.Item2}, Datum rođenja: {user.Value.Item3:yyyy-MM-dd}");
@@ -1223,20 +1386,24 @@ namespace ConsoleFinanceApp
             Console.WriteLine(" 2 - ime i prezime");
 
             var choice = 0;
-            PrintInput();
-            int.TryParse(Console.ReadLine(), out choice);
+            do
+            {
+                PrintInput();
+                int.TryParse(Console.ReadLine(), out choice);
 
-            switch (choice) {
-                case 1:
-                    DeleteUserById(users);
-                    break;
-                case 2:
-                    DeleteUserByName(users);
-                    break;
-                default:
-                    Console.WriteLine("Neispravan unos");
-                    break;
-            }
+                switch (choice)
+                {
+                    case 1:
+                        DeleteUserById(users);
+                        break;
+                    case 2:
+                        DeleteUserByName(users);
+                        break;
+                    default:
+                        Console.WriteLine("Neispravan unos, pokusajte ponovno(1 - 2)");
+                        break;
+                }
+            } while (choice < 1 || choice > 2);
 
         }
 
@@ -1375,12 +1542,12 @@ namespace ConsoleFinanceApp
 
             var userAccounts = new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
             {
-                { "Tekući", new List<Tuple<int, double, string, string, string, DateTime>>
+                { "Tekuci", new List<Tuple<int, double, string, string, string, DateTime>>
                     {
                         Tuple.Create(1, 100.00, "Početno stanje", "prihod", "početni depozit", DateTime.Now)
                     }
                 },
-                { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>
+                { "Ziro", new List<Tuple<int, double, string, string, string, DateTime>>
                     {
                          Tuple.Create(1, 0.00, "Početno stanje", "prihod", "početni depozit", DateTime.Now)
                     }
@@ -1468,12 +1635,12 @@ namespace ConsoleFinanceApp
              {
                  { 1, new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
                      {
-                         { "Tekući", new List<Tuple<int, double, string, string, string, DateTime>>() {
+                         { "Tekuci", new List<Tuple<int, double, string, string, string, DateTime>>() {
                             Tuple.Create(1, 100.00, "Početno stanje", "prihod", "placa", new DateTime(2022,1,4)),
-                            Tuple.Create(2, 200.00, "Kupovina", "prihod", "hrana", new DateTime(2022,2,3)),
+                            Tuple.Create(2, 200.00, "Kupovina", "prihod", "placa", new DateTime(2022,2,3)),
                             Tuple.Create(3, 50.00, "Adaptacija", "rashod", "sport", new DateTime(2022,1,5))
                          }},
-                         { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>() {
+                         { "Ziro", new List<Tuple<int, double, string, string, string, DateTime>>() {
                             Tuple.Create(1, 200.00, "isplata", "prihod", "honorar", new DateTime(2022,1,6))
                          }},
                          { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>() {
@@ -1484,11 +1651,11 @@ namespace ConsoleFinanceApp
 
                  { 2, new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
                      {
-                        { "Tekući", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                        { "Tekuci", new List<Tuple<int, double, string, string, string, DateTime>>(){
                            Tuple.Create(1, 300.00, "Početno stanje", "prihod", "plaća", DateTime.Now),
                            Tuple.Create(2, 100.00, "Kupovina", "rashod", "elektronika", DateTime.Now)
                         }},
-                        { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                        { "Ziro", new List<Tuple<int, double, string, string, string, DateTime>>(){
                            Tuple.Create(1, 150.00, "isplata", "prihod", "honorar", DateTime.Now)
                         }},
                         { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>(){
@@ -1499,11 +1666,11 @@ namespace ConsoleFinanceApp
 
                 { 3, new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
                      {
-                        { "Tekući", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                        { "Tekuci", new List<Tuple<int, double, string, string, string, DateTime>>(){
                            Tuple.Create(1, 300.00, "Početno stanje", "prihod", "plaća", DateTime.Now),
                            Tuple.Create(2, 100.00, "Kupovina", "rashod", "elektronika", DateTime.Now)
                         }},
-                        { "Žiro", new List<Tuple<int, double, string, string, string, DateTime>>(){
+                        { "Ziro", new List<Tuple<int, double, string, string, string, DateTime>>(){
                            Tuple.Create(1, 150.00, "isplata", "prihod", "honorar", DateTime.Now)
                         }},
                         { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>(){
