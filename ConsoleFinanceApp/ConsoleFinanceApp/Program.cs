@@ -1172,8 +1172,7 @@ namespace ConsoleFinanceApp
 
         private static void PrintChoiceForAccounts()
         {
-            Console.WriteLine();
-            Console.WriteLine("1 - unos nove transakcije");
+            Console.WriteLine("\n1 - unos nove transakcije");
             Console.WriteLine("2 - brisanje transakcije");
             Console.WriteLine("3 - uređivanje transakcije");
             Console.WriteLine("4 - pregled transakcija");
@@ -1181,8 +1180,7 @@ namespace ConsoleFinanceApp
         }
         private static void ManageUsers(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts)
         {
-            Console.WriteLine();
-            Console.WriteLine("1 - Unos novog korisnika");
+            Console.WriteLine("\n1 - Unos novog korisnika");
             Console.WriteLine("2 - Brisanje korisnika");
             Console.WriteLine("    a) po id-u");
             Console.WriteLine("    b) po imenu i prezimenu");
@@ -1223,8 +1221,7 @@ namespace ConsoleFinanceApp
 
         private static void ViewAllUsers(Dictionary<int, Tuple<string, string, DateTime>> users, Dictionary<int, Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>> accounts)
         {
-            Console.WriteLine();
-            Console.WriteLine("1 - ispis svih korisnika abecedno po prezimenu");
+            Console.WriteLine("\n1 - ispis svih korisnika abecedno po prezimenu");
             Console.WriteLine("2 - ispis svih korisnika starijih od 30 godina");
             Console.WriteLine("3 - ispis svih korisnika sa barem 1 računom u minusu");
 
@@ -1329,7 +1326,7 @@ namespace ConsoleFinanceApp
 
         private static void EditUser(Dictionary<int, Tuple<string, string, DateTime>> users)
         {
-            Console.WriteLine("Unesite id korisnika kojeg želite urediti");
+            Console.WriteLine("\nUnesite id korisnika kojeg želite urediti");
 
             while (true)
             {
@@ -1368,8 +1365,7 @@ namespace ConsoleFinanceApp
 
         private static void DeleteUser(Dictionary<int, Tuple<string, string, DateTime>> users)
         {
-            Console.WriteLine();
-            Console.WriteLine("Brisanje korisnika po: ");
+            Console.WriteLine("\nBrisanje korisnika po: ");
             Console.WriteLine(" 1 - id");
             Console.WriteLine(" 2 - ime i prezime");
 
@@ -1397,8 +1393,7 @@ namespace ConsoleFinanceApp
 
         private static void DeleteUserByName(Dictionary<int, Tuple<string, string, DateTime>> users)
         {
-
-            Console.WriteLine("Unesite ime i prezime korisnika");
+            Console.WriteLine("\nUnesite ime i prezime korisnika");
 
             while (true)
             {
@@ -1450,7 +1445,7 @@ namespace ConsoleFinanceApp
 
         private static void DeleteUserById(Dictionary<int, Tuple<string, string, DateTime>> users)
         {
-            Console.WriteLine("Unesite id korisnika kojeg zelite izbrisati");
+            Console.WriteLine("\nUnesite id korisnika kojeg zelite izbrisati");
             var id = 0;
 
             while (true)
