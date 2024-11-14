@@ -1635,11 +1635,11 @@ namespace ConsoleFinanceApp
                  { 2, new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
                      {
                         { "Tekuci", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(1, 300.00, "Početno stanje", "prihod", "placa", DateTime.Now),
+                           Tuple.Create(1, 300.00, "Početno stanje", "prihod", "placa",new DateTime(2024,3,6)),
                            Tuple.Create(2, 100.00, "Kupovina", "rashod", "zdravstvo", DateTime.Now)
                         }},
                         { "Ziro", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(1, 150.00, "Isplata", "prihod", "placa", DateTime.Now)
+                           Tuple.Create(1, 150.00, "Isplata", "prihod", "placa", new DateTime(2023,10,4))
                         }},
                         { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>(){
                            Tuple.Create(1, 70.00, "Uplata", "prihod", "stipendija", DateTime.Now)
@@ -1651,13 +1651,13 @@ namespace ConsoleFinanceApp
                      {
                         { "Tekuci", new List<Tuple<int, double, string, string, string, DateTime>>(){
                            Tuple.Create(1, 300.00, "Početno stanje", "prihod", "placa", DateTime.Now),
-                           Tuple.Create(2, 100.00, "Trosak", "rashod", "stanarina", DateTime.Now)
+                           Tuple.Create(2, 100.00, "Trosak", "rashod", "stanarina", new DateTime(2023,2,7))
                         }},
                         { "Ziro", new List<Tuple<int, double, string, string, string, DateTime>>(){
                            Tuple.Create(1, 150.00, "isplata", "prihod", "honorar", DateTime.Now)
                         }},
                         { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(1, 60.00, "Uplata", "prihod", "stipendija", DateTime.Now)
+                           Tuple.Create(1, 60.00, "Uplata", "prihod", "stipendija", new DateTime(2024,1,1))
                          }}
                      }
                  },
