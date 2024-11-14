@@ -44,8 +44,7 @@ namespace ConsoleFinanceApp
 
         private static void PrintInput()
         {
-            Console.WriteLine();
-            Console.Write("Unos: ");
+            Console.Write("\nUnos: ");
         }
 
 
@@ -217,25 +216,26 @@ namespace ConsoleFinanceApp
             Console.WriteLine($"\nStanje racuna prije prijenosa je: {balanceBefore:F2}");
             Console.WriteLine("Unesite iznos za prijenos: ");
             var amount = 0.0;
+            var balance = 0.0;
 
-            while (true)
+            do
             {
                 PrintInput();
                 double.TryParse(Console.ReadLine(), out amount);
-                if(amount < 0)
+                if (amount <= 0)
                 {
                     Console.WriteLine("Iznos mora biti veci od 0");
                     continue;
                 }
-                break;
-            }
 
-            var balance = ShowCurrentAccountBalance(fromAccount);
-            if(amount > balance)
-            {
-                Console.WriteLine("Nemate dovoljno sredstava za prijenos");
-                return;
-            }
+                balance = ShowCurrentAccountBalance(fromAccount);
+
+                if (amount > balance)
+                {
+                    Console.WriteLine("Nemate dovoljno sredstava za prijenos, pokusajte sa manjim iznosom");
+                    continue;
+                }
+            } while (amount <= 0 || amount > balance);
 
             fromAccount.Add(Tuple.Create(fromAccount.Count + 1, amount, "Prijenos novca", "rashod", "prijenos", DateTime.Now));
             toAccount.Add(Tuple.Create(toAccount.Count + 1, amount, "Prijenos novca", "prihod", "prijenos", DateTime.Now));
@@ -292,7 +292,6 @@ namespace ConsoleFinanceApp
         {
             while (true)
             {
-                
                 PrintChoiceForAccounts();
 
                 var actionChoice = 0;
@@ -319,9 +318,7 @@ namespace ConsoleFinanceApp
                         default:
                             Console.WriteLine("Nevažeći odabir. Pokušajte ponovo.");
                             break;
-                    }
-
-                    
+                    } 
                 }
                 else
                 {
@@ -333,8 +330,7 @@ namespace ConsoleFinanceApp
 
         private static void PrintFinancialReport(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine();
-            Console.WriteLine("1 - prikaz trenutnog stanja racuna");
+            Console.WriteLine("\n1 - prikaz trenutnog stanja racuna");
             Console.WriteLine("2 - prikaz ukupnog broja transakcija");
             Console.WriteLine("3 - prikaz ukupnog iznosa prihoda i rashoda za odabrani mjesec i godinu");
             Console.WriteLine("4 - prikaz postotka udjela rashoda za odabranu kategoriju");
@@ -375,8 +371,7 @@ namespace ConsoleFinanceApp
 
         private static void ShowAverageTransactionAmountForCategory(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine();
-            Console.WriteLine("Unesite kategoriju transakcije:");
+            Console.WriteLine("\nUnesite kategoriju transakcije:");
             while (true)
             {
                 PrintInput();
@@ -413,8 +408,7 @@ namespace ConsoleFinanceApp
 
         private static void ShowAverageTransactionAmountForMonthAndYear(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine();
-            Console.WriteLine("Unesite mjesec i godinu za koju zelite ispisati prosjecni iznos transakcije: ");
+            Console.WriteLine("\nUnesite mjesec i godinu za koju zelite ispisati prosjecni iznos transakcije: ");
             Console.Write("Mjesec: ");
             var month = 0;
             while (true)
@@ -540,8 +534,7 @@ namespace ConsoleFinanceApp
                     }
                 }
             }
-            Console.WriteLine();
-            Console.WriteLine($"Ukupni prihodi za mjesec: {month} i godinu {year} je: {income}");
+            Console.WriteLine($"\nUkupni prihodi za mjesec: {month} i godinu {year} je: {income}");
             Console.WriteLine($"Ukupni rashodi za mjesec: {month} i godinu {year} je: {expense}");
             Console.WriteLine($"Ukupno stanje je: {income-expense}");
         }
@@ -580,8 +573,7 @@ namespace ConsoleFinanceApp
 
         private static void ViewTransactions(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine();
-            Console.WriteLine("1 - pregled svih transakcija");
+            Console.WriteLine("\n1 - pregled svih transakcija");
             Console.WriteLine("2 - pregled transakcija sortiranih po iznosu uzlazno");
             Console.WriteLine("3 - pregled transakcija sortiranih po iznosu silazno");
             Console.WriteLine("4 - pregled transakcija sortiranih po opisu abecedno");
@@ -644,8 +636,7 @@ namespace ConsoleFinanceApp
 
         private static void ViewTransactionsByTypeAndCategory(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine();
-            Console.WriteLine("Unesite tip transakcije (prihod ili rashod)");
+            Console.WriteLine("\nUnesite tip transakcije (prihod ili rashod)");
             var type = string.Empty;
             while (true)
             {
@@ -699,8 +690,7 @@ namespace ConsoleFinanceApp
 
         private static void ViewTransactionsByCategory(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine();
-            Console.WriteLine("Unesite kategoriju za koju zelite vidjeti transakcije");
+            Console.WriteLine("\nUnesite kategoriju za koju zelite vidjeti transakcije");
             while (true)
             {
                 PrintInput();
@@ -803,7 +793,7 @@ namespace ConsoleFinanceApp
 
         private static void EditTransaction(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.Write("Unesite id transakcije koju zelite urediti: ");
+            Console.Write("\nUnesite id transakcije koju zelite urediti: ");
             var id = 0;
             PrintInput();
             while(!int.TryParse(Console.ReadLine(), out id))
@@ -841,8 +831,7 @@ namespace ConsoleFinanceApp
 
         private static void DeleteTransaction(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine();
-            Console.WriteLine("1 - po id-u");
+            Console.WriteLine("\n1 - po id-u");
             Console.WriteLine("2 - ispod unesenog iznosa npr(sve transakcije ispod 10 eura)");
             Console.WriteLine("3 - iznad unesenog iznosa");
             Console.WriteLine("4 - brisanje transakcija svih prihoda");
@@ -883,8 +872,7 @@ namespace ConsoleFinanceApp
 
         private static void DeleteAllForCategory(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine("Unesite kategoriju za koju zelite izbrisati transakcije");
-
+            Console.WriteLine("\nUnesite kategoriju za koju zelite izbrisati transakcije");
 
             while (true)
             {
@@ -960,7 +948,7 @@ namespace ConsoleFinanceApp
 
         private static void DeleteOverAmonut(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine("Unesite iznos iznad kojeg želite izbrisati sve transakcije");
+            Console.WriteLine("\nUnesite iznos iznad kojeg želite izbrisati sve transakcije");
             var amount = 0.0;
             PrintInput();
             while (!double.TryParse(Console.ReadLine(), out amount))
@@ -982,7 +970,7 @@ namespace ConsoleFinanceApp
 
         private static void DeleteBelowAmount(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine("Unesite iznos ispod kojeg želite izbrisati sve transakcije");
+            Console.WriteLine("\nUnesite iznos ispod kojeg želite izbrisati sve transakcije");
             var amount = 0.0;
             PrintInput();
             while (!double.TryParse(Console.ReadLine(), out amount))
@@ -1004,7 +992,7 @@ namespace ConsoleFinanceApp
         private static void DeleteById(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
             var id = 0;
-            Console.Write("Unesite id transakcije koju zelite izbrisati: ");
+            Console.Write("\nUnesite id transakcije koju zelite izbrisati: ");
             PrintInput();
             while (!int.TryParse(Console.ReadLine(), out id))
             {
@@ -1059,7 +1047,7 @@ namespace ConsoleFinanceApp
 
         private static void AddTransaction(List<Tuple<int, double, string, string, string, DateTime>> accountTransactions)
         {
-            Console.WriteLine("1 - trenutno izvšena transakcija");
+            Console.WriteLine("\n1 - trenutno izvšena transakcija");
             Console.WriteLine("2 - ranije izvršena transakcija");
 
             var choice = 0;
@@ -1637,14 +1625,14 @@ namespace ConsoleFinanceApp
                      {
                          { "Tekuci", new List<Tuple<int, double, string, string, string, DateTime>>() {
                             Tuple.Create(1, 100.00, "Početno stanje", "prihod", "placa", new DateTime(2022,1,4)),
-                            Tuple.Create(2, 200.00, "Kupovina", "prihod", "placa", new DateTime(2022,2,3)),
-                            Tuple.Create(3, 50.00, "Adaptacija", "rashod", "sport", new DateTime(2022,1,5))
+                            Tuple.Create(2, 200.00, "Primanje", "prihod", "placa", new DateTime(2022,2,3)),
+                            Tuple.Create(3, 50.00, "Clanarina", "rashod", "sport", new DateTime(2022,1,5))
                          }},
                          { "Ziro", new List<Tuple<int, double, string, string, string, DateTime>>() {
-                            Tuple.Create(1, 200.00, "isplata", "prihod", "honorar", new DateTime(2022,1,6))
+                            Tuple.Create(1, 200.00, "Isplata", "prihod", "honorar", new DateTime(2022,1,6))
                          }},
                          { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>() {
-                            Tuple.Create(1, 50.00, "Uplata", "prihod", "telefon", DateTime.Now)
+                            Tuple.Create(1, 50.00, "Uplata", "prihod", "stipendija", DateTime.Now)
                          }}        
                     }
                  },
@@ -1652,14 +1640,14 @@ namespace ConsoleFinanceApp
                  { 2, new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
                      {
                         { "Tekuci", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(1, 300.00, "Početno stanje", "prihod", "plaća", DateTime.Now),
-                           Tuple.Create(2, 100.00, "Kupovina", "rashod", "elektronika", DateTime.Now)
+                           Tuple.Create(1, 300.00, "Početno stanje", "prihod", "placa", DateTime.Now),
+                           Tuple.Create(2, 100.00, "Kupovina", "rashod", "zdravstvo", DateTime.Now)
                         }},
                         { "Ziro", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(1, 150.00, "isplata", "prihod", "honorar", DateTime.Now)
+                           Tuple.Create(1, 150.00, "Isplata", "prihod", "placa", DateTime.Now)
                         }},
                         { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(1, 0.00, "Uplata", "prihod", "internet", DateTime.Now)
+                           Tuple.Create(1, 70.00, "Uplata", "prihod", "stipendija", DateTime.Now)
                          }}
                      }
                  },
@@ -1667,14 +1655,14 @@ namespace ConsoleFinanceApp
                 { 3, new Dictionary<string, List<Tuple<int, double, string, string, string, DateTime>>>()
                      {
                         { "Tekuci", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(1, 300.00, "Početno stanje", "prihod", "plaća", DateTime.Now),
-                           Tuple.Create(2, 100.00, "Kupovina", "rashod", "elektronika", DateTime.Now)
+                           Tuple.Create(1, 300.00, "Početno stanje", "prihod", "placa", DateTime.Now),
+                           Tuple.Create(2, 100.00, "Trosak", "rashod", "stanarina", DateTime.Now)
                         }},
                         { "Ziro", new List<Tuple<int, double, string, string, string, DateTime>>(){
                            Tuple.Create(1, 150.00, "isplata", "prihod", "honorar", DateTime.Now)
                         }},
                         { "Prepaid", new List<Tuple<int, double, string, string, string, DateTime>>(){
-                           Tuple.Create(1, 0.00, "Uplata", "prihod", "internet", DateTime.Now)
+                           Tuple.Create(1, 60.00, "Uplata", "prihod", "stipendija", DateTime.Now)
                          }}
                      }
                  },
